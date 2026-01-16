@@ -10,82 +10,41 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #050505; color: white; }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        #amountDisplay:focus { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        #amountDisplay:focus { border-color: #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.2); }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-6">
 
     <div class="w-full max-w-sm">
-        <div class="text-center mb-8">
+        <div class="text-center mb-10">
             <h1 class="text-3xl font-800 tracking-tighter italic">
                 HANN25<span class="text-blue-500">HOST</span>
             </h1>
-            <p class="text-zinc-500 text-[10px] tracking-[0.4em] uppercase mt-1">Secure Payment Terminal</p>
+            <div class="flex justify-center items-center gap-2 mt-1">
+                <div class="h-[1px] w-4 bg-zinc-800"></div>
+                <p class="text-zinc-500 text-[9px] tracking-[0.4em] uppercase">Premium Terminal</p>
+                <div class="h-[1px] w-4 bg-zinc-800"></div>
+            </div>
         </div>
 
-        <div class="glass rounded-[2.5rem] p-8 shadow-2xl mb-8">
-            <div class="mb-6">
-                <label class="text-[10px] font-bold text-zinc-500 mb-3 block uppercase tracking-[0.2em] ml-1">Nominal Transfer</label>
-                <div class="relative">
-                    <span class="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-500 font-bold text-lg">Rp</span>
+        <div class="glass rounded-[2.5rem] p-8 shadow-2xl mb-10">
+            <div class="mb-6 text-center">
+                <label class="text-[10px] font-bold text-zinc-500 mb-4 block uppercase tracking-[0.3em]">Nominal Pembayaran</label>
+                <div class="relative group">
+                    <span class="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-600 font-bold text-xl group-focus-within:text-blue-500 transition-colors">Rp</span>
                     <input type="text" id="amountDisplay" placeholder="0" inputmode="numeric" 
                            oninput="formatRupiah(this)"
                            onkeydown="if(event.key==='Enter') generateQRIS()"
-                           class="w-full bg-[#111] border border-zinc-800 rounded-2xl py-5 pl-14 pr-6 text-2xl font-800 outline-none text-white focus:border-blue-500">
+                           class="w-full bg-[#0a0a0a] border border-zinc-800 rounded-2xl py-6 pl-16 pr-6 text-3xl font-800 outline-none text-white transition-all">
                 </div>
             </div>
             
             <button onclick="generateQRIS()" 
-                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl transition-all active:scale-[0.95] shadow-lg shadow-blue-900/20 uppercase tracking-widest">
+                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-5 rounded-2xl transition-all active:scale-[0.96] shadow-lg shadow-blue-900/30 uppercase tracking-widest text-sm">
                 Generate QRIS
             </button>
         </div>
 
-        <div id="qr-area" class="hidden animate-in fade-in duration-500">
-            <div id="capture-frame" class="bg-[#0f0f0f] p-8 rounded-[3rem] border border-zinc-800 text-center">
-                <div class="mb-6">
-                    <p class="text-white font-800 text-xl italic tracking-tighter">HANN25<span class="text-blue-500">HOST</span></p>
-                    <div class="h-1 w-12 bg-blue-600 mx-auto mt-1 rounded-full"></div>
-                </div>
-
-                <div class="bg-white p-6 rounded-[2rem] shadow-2xl inline-block mx-auto mb-6">
-                    <div id="qrcode"></div>
-                </div>
-
-                <div class="space-y-1">
-                    <p class="text-zinc-500 text-[10px] uppercase tracking-[0.3em]">Total Pembayaran</p>
-                    <p id="final-amount" class="text-3xl font-800 text-white tracking-tight"></p>
-                </div>
-
-                <div class="mt-8 flex justify-center items-center gap-4 text-[9px] text-zinc-600 uppercase tracking-[0.2em] font-bold">
-                    <span>Otomatis</span>
-                    <span class="w-1 h-1 bg-zinc-800 rounded-full"></span>
-                    <span>Aman</span>
-                    <span class="w-1 h-1 bg-zinc-800 rounded-full"></span>
-                    <span>Terverifikasi</span>
-                </div>
-            </div>
-
-            <button onclick="downloadQR()" class="mt-6 w-full flex items-center justify-center gap-2 text-zinc-400 hover:text-white text-xs font-bold uppercase tracking-widest transition-colors">
-                Simpan ke Galeri (HD)
-            </button>
-        </div>
-    </div>
-
-    <script>
-        function formatRupiah(el) {
-            let val = el.value.replace(/[^0-9]/g, '');
-            el.value = val !== "" ? parseInt(val).toLocaleString('id-ID') : "";
-        }
-
-        function generateQRIS() {
-            // Tutup keyboard HP setelah tekan enter
-            document.activeElement.blur();
-
-            const displayVal = document.getElementById('amountDisplay').value;
-            const rawAmount = displayVal.replace(/[^0-9]/g, '');
-            if (!rawAmount || rawAmount < 1) return alert("Masukkan nominal!");
-
-            const qrisData = "
-                
+        <div id="qr-area" class="hidden opacity-0 transform translate-y-4 transition-all duration-700">
+            <div id="capture-frame" class="bg-white p-1
