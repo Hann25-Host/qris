@@ -60,47 +60,36 @@
         function generateQRISWithFrame() {
             const displayVal = document.getElementById('amountDisplay').value;
             const rawAmount = displayVal.replace(/[^0-9]/g, '');
-            
             if (!rawAmount || rawAmount < 1) return alert("Isi nominal dulu!");
 
             const qrisData = "00020101021126670016COM.NOBUBANK.WWW01189360050300000879140214532503957167510303UMI51440014ID.CO.QRIS.WWW0215ID20253773559250303UMI5204481253033605802ID5917HANN 25 OK22116546010PEKALONGAN61055111162070703A01";
             const amountStr = "54" + ("00" + rawAmount.length).slice(-2) + rawAmount;
-            const qrisTanpaCRC = qrisData + amountStr + "6304";
-            const finalQRIS = qrisTanpaCRC + calcCRC16(qrisTanpaCRC);
+            const finalQRIS = qrisData + amountStr + "6304" + calcCRC16(qrisData + amountStr + "6304");
 
             const rawContainer = document.getElementById('qrcode-raw');
             rawContainer.innerHTML = "";
-            
-            new QRCode(rawContainer, { 
-                text: finalQRIS, 
-                width: 1000, 
-                height: 1000, 
-                correctLevel: QRCode.CorrectLevel.M 
-            });
+            new QRCode(rawContainer, { text: finalQRIS, width: 1000, height: 1000, correctLevel: QRCode.CorrectLevel.M });
 
             setTimeout(() => {
                 const canvas = document.getElementById('canvas-result');
                 const ctx = canvas.getContext('2d');
                 const qrCanvasRaw = rawContainer.querySelector('canvas');
                 const frameImg = new Image();
-
                 frameImg.crossOrigin = "anonymous";
                 frameImg.src = "https://raw.githubusercontent.com/Hann25-Host/qris/main/QRIS.png";
 
                 frameImg.onload = function() {
                     canvas.width = frameImg.width;
                     canvas.height = frameImg.height;
-                    
                     ctx.imageSmoothingEnabled = false;
                     ctx.drawImage(frameImg, 0, 0);
 
-                    // --- KALIBRASI PRESISI ---
-                    const qrSize = 710; 
+                    // --- KALIBRASI SUPER PRESISI ---
+                    const qrSize = 755; 
                     const posX = (canvas.width - qrSize) / 2; 
-                    const posY = 625; // Diturunkan biar nggak nabrak teks NMID atas
+                    const posY = 598; 
 
                     ctx.drawImage(qrCanvasRaw, posX, posY, qrSize, qrSize);
-
                     document.getElementById('display-amount').innerText = "Rp " + parseInt(rawAmount).toLocaleString('id-ID');
                     document.getElementById('qr-area').classList.remove('hidden');
                 };
@@ -109,9 +98,8 @@
 
         function downloadQR() {
             const canvas = document.getElementById('canvas-result');
-            const rawAmount = document.getElementById('amountDisplay').value.replace(/[^0-9]/g, '');
             const link = document.createElement('a');
-            link.download = `QRIS_HANN25_${rawAmount}.png`;
+            link.download = `QRIS_HANN25.png`;
             link.href = canvas.toDataURL("image/png", 1.0);
             link.click();
         }
