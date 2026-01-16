@@ -70,8 +70,13 @@
 
             const rawContainer = document.getElementById('qrcode-raw');
             rawContainer.innerHTML = "";
-            // Resolusi QR mentah ditingkatkan biar jernih di frame
-            new QRCode(rawContainer, { text: finalQRIS, width: 1000, height: 1000, correctLevel: QRCode.CorrectLevel.M });
+            
+            new QRCode(rawContainer, { 
+                text: finalQRIS, 
+                width: 1200, 
+                height: 1200, 
+                correctLevel: QRCode.CorrectLevel.M 
+            });
 
             setTimeout(() => {
                 const canvas = document.getElementById('canvas-result');
@@ -86,12 +91,15 @@
                     canvas.width = frameImg.width;
                     canvas.height = frameImg.height;
                     
+                    // Matikan smoothing supaya QR tetap tajam (pixel perfect)
+                    ctx.imageSmoothingEnabled = false;
+                    
                     ctx.drawImage(frameImg, 0, 0);
 
-                    // --- KALIBRASI POSISI (FIXED) ---
-                    const qrSize = 780; // Ukuran QR pas di kotak putih
-                    const posX = (canvas.width - qrSize) / 2; // Auto Center
-                    const posY = 555; // Posisi vertikal di tengah kotak putih
+                    // --- KALIBRASI BARU ---
+                    const qrSize = 830; // Lebih gede
+                    const posX = (canvas.width - qrSize) / 2; 
+                    const posY = 585; // Lebih turun
 
                     ctx.drawImage(qrCanvasRaw, posX, posY, qrSize, qrSize);
 
@@ -106,7 +114,7 @@
             const rawAmount = document.getElementById('amountDisplay').value.replace(/[^0-9]/g, '');
             const link = document.createElement('a');
             link.download = `QRIS_HANN25_${rawAmount}.png`;
-            link.href = canvas.toDataURL("image/png");
+            link.href = canvas.toDataURL("image/png", 1.0);
             link.click();
         }
 
