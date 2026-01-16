@@ -13,7 +13,6 @@
         .card-bg { background-color: #1a1a1a; border: 1px solid #2a2a2a; }
         .input-bg { background-color: #262626; }
         
-        /* Style Frame Poster */
         #capture-frame { 
             background: #ffffff; 
             color: #000; 
@@ -22,7 +21,6 @@
             border-radius: 2.5rem;
         }
 
-        /* Tombol Download gaya Gambar Kedua */
         .btn-download-custom {
             background-color: #161616;
             border: 1px solid #2a2a2a;
@@ -35,6 +33,7 @@
             gap: 12px;
             transition: all 0.2s;
             margin-top: 1.5rem;
+            cursor: pointer;
         }
         .btn-download-custom:active { transform: scale(0.98); background-color: #202020; }
         .btn-download-custom span {
@@ -77,7 +76,7 @@
             <div id="capture-frame" class="p-10 shadow-2xl text-center">
                 <div class="mb-6">
                     <p class="text-[10px] font-bold tracking-[0.3em] uppercase text-zinc-400 mb-1">Merchant Name</p>
-                    <p class="text-2xl font-800 uppercase tracking-tight" id="display-merchant">HANN 25</p>
+                    <p class="text-2xl font-800 uppercase tracking-tight">HANN 25</p>
                 </div>
 
                 <div class="bg-white p-4 rounded-2xl inline-block mx-auto mb-6">
@@ -116,7 +115,6 @@
                 return;
             }
 
-            // QRIS Data Base
             const qrisData = "00020101021126670016COM.NOBUBANK.WWW01189360050300000879140214532503957167510303UMI51440014ID.CO.QRIS.WWW0215ID20253773559250303UMI5204481253033605802ID5917HANN 25 OK22116546010PEKALONGAN61055111162070703A01";
             const amountStr = "54" + ("00" + rawAmount.length).slice(-2) + rawAmount;
             const finalQRIS = qrisData + amountStr + "6304" + calcCRC16(qrisData + amountStr + "6304");
@@ -124,7 +122,7 @@
             const qrContainer = document.getElementById('qrcode');
             qrContainer.innerHTML = "";
             
-            // Render QR
+            // Render QR sebagai gambar (useSVG: false defaultnya bakal bikin img tag juga)
             new QRCode(qrContainer, {
                 text: finalQRIS,
                 width: 250,
@@ -143,14 +141,23 @@
         async function downloadPoster() {
             const frame = document.getElementById('capture-frame');
             
-            // Kasih delay 100ms biar QRCode.js kelar render Canvas-nya
-            await new Promise(resolve => setTimeout(resolve, 100));
+            // KUNCINYA DI SINI:
+            // Ambil elemen img yang dibuat otomatis sama qrcode.js
+            const qrImg = document.querySelector('#qrcode img');
+            if (qrImg) {
+                // Paksa source gambar di-load ulang biar html2canvas nggak skip
+                const src = qrImg.src;
+                qrImg.src = src; 
+            }
+
+            // Tunggu sebentar biar render beneran kelar
+            await new Promise(resolve => setTimeout(resolve, 200));
 
             html2canvas(frame, { 
-                scale: 3,
-                backgroundColor: null,
-                logging: false,
-                useCORS: true
+                scale: 4, // Makin tinggi biar makin HD pas di-print/scan
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: "#ffffff"
             }).then(canvas => {
                 const link = document.createElement('a');
                 link.download = `QRIS_HANN25_${Date.now()}.png`;
