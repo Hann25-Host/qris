@@ -10,7 +10,6 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
         body { font-family: 'Inter', sans-serif; }
         .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
 <body class="bg-[#0f0f0f] text-white flex items-center justify-center min-h-screen p-6">
@@ -26,7 +25,7 @@
                 <label class="text-[10px] font-bold text-zinc-500 mb-2 block uppercase tracking-widest ml-1">Nominal Bayar</label>
                 <div class="relative">
                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-semibold">Rp</span>
-                    <input type="number" id="amount" placeholder="0" 
+                    <input type="text" id="amountDisplay" placeholder="0" oninput="formatRupiah(this)"
                            class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-xl font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-zinc-700">
                 </div>
             </div>
@@ -36,13 +35,17 @@
                 Generate QRIS
             </button>
 
-            <div id="qr-area" class="hidden mt-8 pt-8 border-t border-white/10 animate-fade-in">
-                <div class="flex flex-col items-center">
+            <div id="qr-area" class="hidden mt-8 pt-8 border-t border-white/10">
+                <div class="flex flex-col items-center text-center">
                     <div id="qrcode" class="p-3 bg-white rounded-2xl shadow-[0_0_30px_rgba(255,255,255,0.1)]"></div>
-                    <div class="mt-6 text-center">
+                    <div class="mt-6">
                         <p class="text-zinc-500 text-[10px] uppercase tracking-widest mb-1">Total Tagihan</p>
-                        <p id="display-amount" class="text-2xl font-800 text-white"></p>
+                        <p id="display-amount" class="text-2xl font-800 text-white mb-6"></p>
                     </div>
+                    <button onclick="downloadQR()" class="flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm font-semibold transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Download Gambar QR
+                    </button>
                 </div>
             </div>
         </div>
@@ -51,14 +54,25 @@
     </div>
 
     <script>
-        function generateQRIS() {
-            const amountInput = document.getElementById('amount').value;
-            if (!amountInput || amountInput < 1) return;
+        // Fungsi untuk membuat titik otomatis saat mengetik
+        function formatRupiah(input) {
+            let value = input.value.replace(/[^0-9]/g, '');
+            if (value === "") {
+                input.value = "";
+                return;
+            }
+            input.value = parseInt(value).toLocaleString('id-ID');
+        }
 
-            // Data QRIS Statis lo
+        function generateQRIS() {
+            // Ambil angka mentah tanpa titik
+            const displayVal = document.getElementById('amountDisplay').value;
+            const rawAmount = displayVal.replace(/[^0-9]/g, '');
+            
+            if (!rawAmount || rawAmount < 1) return;
+
             let qrisData = "00020101021126670016COM.NOBUBANK.WWW01189360050300000879140214532503957167510303UMI51440014ID.CO.QRIS.WWW0215ID20253773559250303UMI5204481253033605802ID5917HANN 25 OK22116546010PEKALONGAN61055111162070703A01";
-            let fee = amountInput.toString();
-            let amountStr = "54" + ("00" + fee.length).slice(-2) + fee;
+            let amountStr = "54" + ("00" + rawAmount.length).slice(-2) + rawAmount;
             let qrisTanpaCRC = qrisData + amountStr + "6304";
             let crc = calcCRC16(qrisTanpaCRC);
             let finalQRIS = qrisTanpaCRC + crc;
@@ -66,15 +80,23 @@
             document.getElementById('qrcode').innerHTML = "";
             new QRCode(document.getElementById("qrcode"), {
                 text: finalQRIS,
-                width: 200,
-                height: 200,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.M
+                width: 256,
+                height: 256
             });
 
-            document.getElementById('display-amount').innerText = "Rp " + parseInt(amountInput).toLocaleString('id-ID');
+            document.getElementById('display-amount').innerText = "Rp " + parseInt(rawAmount).toLocaleString('id-ID');
             document.getElementById('qr-area').classList.remove('hidden');
+        }
+
+        function downloadQR() {
+            const canvas = document.querySelector('#qrcode canvas');
+            const rawAmount = document.getElementById('amountDisplay').value.replace(/[^0-9]/g, '');
+            if (canvas) {
+                const link = document.createElement('a');
+                link.download = 'QRIS-HANN25-' + rawAmount + '.png';
+                link.href = canvas.toDataURL();
+                link.click();
+            }
         }
 
         function calcCRC16(str) {
