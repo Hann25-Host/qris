@@ -3,48 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QRIS HANN25 HOST</title>
+    <title>QRIS HANN25</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #050505; color: white; }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.08); }
-        #amountDisplay:focus { border-color: #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.2); }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0f0f0f; color: white; }
+        .card-bg { background-color: #1a1a1a; border: 1px solid #2a2a2a; }
+        .input-bg { background-color: #262626; }
+        #canvas-result { width: 100%; max-width: 340px; height: auto; border-radius: 1.5rem; display: block; margin: 0 auto; }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-6">
 
-    <div class="w-full max-w-sm">
-        <div class="text-center mb-10">
-            <h1 class="text-3xl font-800 tracking-tighter italic">
-                HANN25<span class="text-blue-500">HOST</span>
-            </h1>
-            <div class="flex justify-center items-center gap-2 mt-1">
-                <div class="h-[1px] w-4 bg-zinc-800"></div>
-                <p class="text-zinc-500 text-[9px] tracking-[0.4em] uppercase">Premium Terminal</p>
-                <div class="h-[1px] w-4 bg-zinc-800"></div>
-            </div>
-        </div>
+    <div class="w-full max-w-sm text-center">
+        <h1 class="text-2xl font-800 tracking-tight mb-1 uppercase">
+            QRIS <span class="text-blue-500">HANN25</span>
+        </h1>
+        <p class="text-zinc-500 text-[10px] tracking-[0.2em] mb-8 uppercase">Secure Payment Terminal</p>
 
-        <div class="glass rounded-[2.5rem] p-8 shadow-2xl mb-10">
-            <div class="mb-6 text-center">
-                <label class="text-[10px] font-bold text-zinc-500 mb-4 block uppercase tracking-[0.3em]">Nominal Pembayaran</label>
-                <div class="relative group">
-                    <span class="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-600 font-bold text-xl group-focus-within:text-blue-500 transition-colors">Rp</span>
+        <div class="card-bg rounded-[2.5rem] p-8 shadow-2xl">
+            <div class="text-left mb-6">
+                <label class="text-[10px] font-bold text-zinc-500 mb-3 block uppercase tracking-widest ml-1">Nominal Bayar</label>
+                <div class="relative">
+                    <span class="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400 font-semibold text-lg">Rp</span>
                     <input type="text" id="amountDisplay" placeholder="0" inputmode="numeric" 
                            oninput="formatRupiah(this)"
-                           onkeydown="if(event.key==='Enter') generateQRIS()"
-                           class="w-full bg-[#0a0a0a] border border-zinc-800 rounded-2xl py-6 pl-16 pr-6 text-3xl font-800 outline-none text-white transition-all">
+                           onkeydown="if(event.key === 'Enter') { generateQRISWithFrame(); this.blur(); }"
+                           class="w-full input-bg border-none rounded-2xl py-5 pl-14 pr-6 text-2xl font-bold focus:ring-2 focus:ring-blue-600 outline-none text-white">
                 </div>
             </div>
             
-            <button onclick="generateQRIS()" 
-                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-5 rounded-2xl transition-all active:scale-[0.96] shadow-lg shadow-blue-900/30 uppercase tracking-widest text-sm">
+            <button onclick="generateQRISWithFrame()" 
+                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl transition-all active:scale-[0.97] text-lg uppercase">
                 Generate QRIS
             </button>
-        </div>
 
-        <div id="qr-area" class="hidden opacity-0 transform translate-y-4 transition-all duration-700">
-            <div id="capture-frame" class="bg-white p-1
+            <div id="qr-area" class="hidden mt-8 pt-8 border-t border-zinc-800">
+                <canvas id="canvas-result" class="shadow-2xl"></canvas>
+                <div class="mt-6 text-center">
+                    <p id="display-amount" class="text-2xl font-bold text-white"></p>
+                </div>
+                <button onclick="downloadQR()" class="mt-4 flex items-center justify-center w-full gap-2 text-blue-500 hover:text-blue-400 text-sm font-bold uppercase tracking-widest">
+                    Download QR Frame
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="qrcode-raw" style="display:none;"></div>
+
+    <script>
+        // Fungsi titik otomatis (Ribuan)
+        function formatRupiah(el) {
+            let val = el.value.replace(/[^0-9]/g, '');
+            if (val !== "") {
+                el.value = parseInt(val).toLocaleString('id-ID');
+            } else {
+                el.value = "";
+            }
+        }
+
+        function generateQRISWithFrame() {
+            // Tutup keyboard HP
+            document.activeElement.blur();
+
+            const displayVal = document.getElementById('amountDisplay').value;
+            const rawAmount = displayVal.replace(/[^0-9]/g, '');
+            
+            if (!rawAmount || rawAmount < 1) {
+                alert("Isi nominal dulu bang!");
+                return;
+            }
+
+            const qrisData = "00020101021126670016COM.NOBUBANK.WWW01189360050300000879140214532503957167510303UMI51440014ID.CO.QRIS.WWW0215ID20253773559250303UMI5204481253033605802ID5917HANN 25 OK22116546010PEKALONGAN61055111162070703A01";
+            const amountStr = "54" + ("00" + rawAmount.length).slice(-2) + rawAmount;
+            const finalQRIS = qrisData + amountStr + "6304" + calcCRC16(qrisData + amountStr + "6304");
+
+            const rawContainer = document.getElementById('qrcode-raw');
+            rawContainer.innerHTML = "";
+            new QRCode(rawContainer, { text: finalQRIS, width: 1000, height: 1000, correctLevel: QRCode.CorrectLevel.M });
+
+            setTimeout(() => {
+                const canvas = document.getElementById('canvas-result');
+                const ctx = canvas.getContext('2d');
+                const qrCanvasRaw = rawContainer.querySelector('canvas');
+                const frameImg = new Image();
+                
+                frameImg.crossOrigin = "anonymous";
+                frameImg.src = "https://raw.githubusercontent.com/Hann25-Host/qris/main/QRIS.png";
+
+                frameImg.onload = function() {
+                    canvas.width = frameImg.width;
+                    canvas.height = frameImg.height;
+                    ctx.imageSmoothingEnabled = false;
+                    ctx.drawImage(frameImg, 0, 0);
+
+                    // POSISI PRESISI SESUAI KALIBRASI TERAKHIR
+                    const qrSize = 755; 
+                    const posX = (canvas.width - qrSize) / 2; 
+                    const posY = 598; 
+
+                    ctx.drawImage(qrCanvasRaw, posX, posY, qrSize, qrSize);
+                    document.getElementById('display-amount').innerText = "Rp " + parseInt(rawAmount).toLocaleString('id-ID');
+                    document.getElementById('qr-area').classList.remove('hidden');
+                    
+                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                };
+            }, 300);
+        }
+
+        function downloadQR() {
+            const canvas = document.getElementById('canvas-result');
+            const link = document.createElement('a');
+            link.download = `QRIS_HANN25.png`;
+            link.href = canvas.toDataURL("image/png", 1.0);
+            link.click();
+        }
+
+        function calcCRC16(str) {
+            let crc = 0xFFFF;
+            for (let i = 0; i < str.length; i++) {
+                crc ^= str.charCodeAt(i) << 8;
+                for (let j = 0; j < 8; j++) {
+                    if ((crc & 0x8000) !== 0) crc = (crc << 1) ^ 0x1021;
+                    else crc <<= 1;
+                }
+            }
+            return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+        }
+    </script>
+</body>
+</html>
