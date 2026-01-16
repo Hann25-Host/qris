@@ -12,13 +12,13 @@
         body { font-family: 'Inter', sans-serif; background-color: #0f0f0f; color: white; }
         .card-bg { background-color: #1a1a1a; border: 1px solid #2a2a2a; }
         .input-bg { background-color: #262626; }
-        /* Style Frame Poster */
         #capture-frame { 
-            background: linear-gradient(135deg, #ffffff 0%, #f4f4f4 100%); 
+            background: #ffffff; 
             color: #000; 
             width: 350px; 
             margin: 0 auto; 
         }
+        #qrcode img { display: inline-block !important; margin: 0 auto; }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-6">
@@ -37,40 +37,36 @@
                     <input type="text" id="amountDisplay" placeholder="0" inputmode="numeric" 
                            oninput="formatRupiah(this)"
                            onkeydown="if(event.key === 'Enter') { generateQRIS(); this.blur(); }"
-                           class="w-full input-bg border-none rounded-2xl py-5 pl-14 pr-6 text-2xl font-bold focus:ring-2 focus:ring-blue-600 outline-none text-white">
+                           class="w-full input-bg border-none rounded-2xl py-5 pl-14 pr-6 text-2xl font-bold focus:ring-2 focus:ring-blue-600 outline-none text-white transition-all">
                 </div>
             </div>
             
             <button onclick="generateQRIS()" 
-                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl transition-all active:scale-[0.97] text-lg uppercase">
+                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl transition-all active:scale-[0.97] text-lg uppercase tracking-wider">
                 Generate QRIS
             </button>
         </div>
 
-        <div id="result-area" class="hidden animate-in fade-in duration-500">
-            <div id="capture-frame" class="p-8 rounded-[2rem] shadow-2xl text-center">
-                <div class="mb-4">
-                    <p class="text-xs font-bold tracking-[0.3em] uppercase text-zinc-400">Merchant Name</p>
-                    <p class="text-xl font-800 uppercase tracking-tight">QRIS HANN25</p>
-                </div>
-
-                <div class="bg-white p-4 rounded-xl inline-block mx-auto mb-4 border border-zinc-200">
+        <div id="result-area" class="hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div id="capture-frame" class="p-10 rounded-[2.5rem] shadow-2xl text-center">
+                
+                <div class="bg-white p-4 rounded-2xl inline-block mx-auto mb-6 border border-zinc-100 shadow-sm">
                     <div id="qrcode"></div>
                 </div>
 
-                <div class="space-y-1">
-                    <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-500">Total Tagihan</p>
-                    <p id="display-amount" class="text-3xl font-800 text-black"></p>
+                <div class="space-y-1 mb-6">
+                    <p class="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-400">Total Tagihan</p>
+                    <p id="display-amount" class="text-4xl font-800 text-black tracking-tighter"></p>
                 </div>
                 
-                <div class="mt-6 pt-4 border-t border-zinc-200">
-                    <p class="text-[8px] font-bold uppercase tracking-widest text-zinc-400">Scan & Bayar Sekarang</p>
+                <div class="pt-6 border-t border-zinc-100">
+                    <p class="text-[11px] font-bold uppercase tracking-[0.4em] text-blue-600">DOWNLOAD QRIS</p>
                 </div>
             </div>
 
             <button onclick="downloadPoster()" 
-                    class="mt-6 flex items-center justify-center w-full gap-2 text-blue-500 hover:text-blue-400 text-sm font-bold uppercase tracking-widest">
-                <span>⬇</span> Simpan ke Galeri
+                    class="mt-8 flex items-center justify-center w-full gap-3 text-zinc-400 hover:text-white text-[11px] font-bold uppercase tracking-[0.3em] py-4 border border-zinc-800 rounded-2xl transition-all active:scale-95">
+                <span class="text-lg">💾</span> Simpan Ke Galeri
             </button>
         </div>
     </div>
@@ -86,7 +82,7 @@
             const rawAmount = displayVal.replace(/[^0-9]/g, '');
             
             if (!rawAmount || rawAmount < 1) {
-                alert("Isi nominal dulu bang!");
+                alert("Nominal wajib diisi bang!");
                 return;
             }
 
@@ -96,10 +92,12 @@
 
             const qrContainer = document.getElementById('qrcode');
             qrContainer.innerHTML = "";
+            
+            // Generate QR (Pake Canvas buat Capture)
             new QRCode(qrContainer, {
                 text: finalQRIS,
-                width: 250,
-                height: 250,
+                width: 260,
+                height: 260,
                 colorDark: "#000000",
                 colorLight: "#ffffff",
                 correctLevel: QRCode.CorrectLevel.M
@@ -108,14 +106,24 @@
             document.getElementById('display-amount').innerText = "Rp " + parseInt(rawAmount).toLocaleString('id-ID');
             document.getElementById('result-area').classList.remove('hidden');
             
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            // Auto scroll ke bawah
+            setTimeout(() => {
+                window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            }, 100);
         }
 
         function downloadPoster() {
             const frame = document.getElementById('capture-frame');
-            html2canvas(frame, { scale: 3 }).then(canvas => {
+            
+            // Mastiin QR ke-render di download
+            html2canvas(frame, { 
+                scale: 4, // Ultra HD
+                useCORS: true,
+                allowTaint: true,
+                backgroundColor: "#ffffff"
+            }).then(canvas => {
                 const link = document.createElement('a');
-                link.download = 'QRIS_HANN25_Invoice.png';
+                link.download = `QRIS_HANN25_${Date.now()}.png`;
                 link.href = canvas.toDataURL("image/png");
                 link.click();
             });
