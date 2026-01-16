@@ -73,8 +73,8 @@
             
             new QRCode(rawContainer, { 
                 text: finalQRIS, 
-                width: 1200, 
-                height: 1200, 
+                width: 1000, 
+                height: 1000, 
                 correctLevel: QRCode.CorrectLevel.M 
             });
 
@@ -91,15 +91,13 @@
                     canvas.width = frameImg.width;
                     canvas.height = frameImg.height;
                     
-                    // Matikan smoothing supaya QR tetap tajam (pixel perfect)
                     ctx.imageSmoothingEnabled = false;
-                    
                     ctx.drawImage(frameImg, 0, 0);
 
-                    // --- KALIBRASI BARU ---
-                    const qrSize = 830; // Lebih gede
+                    // --- KALIBRASI PRESISI ---
+                    const qrSize = 710; 
                     const posX = (canvas.width - qrSize) / 2; 
-                    const posY = 585; // Lebih turun
+                    const posY = 625; // Diturunkan biar nggak nabrak teks NMID atas
 
                     ctx.drawImage(qrCanvasRaw, posX, posY, qrSize, qrSize);
 
