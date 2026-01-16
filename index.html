@@ -25,7 +25,6 @@
         .card-bg { background-color: #1a1a1a; border: 1px solid #2a2a2a; }
         .input-bg { background-color: #262626; }
         
-        /* Area khusus capture agar hasil gambar rapi */
         #capture-area {
             padding: 20px;
             display: flex;
@@ -45,7 +44,6 @@
             padding: 40px;
         }
 
-        /* Tombol Simpan Pakai Emoji */
         .btn-download-custom {
             background-color: #111111;
             border: 1px solid #222222;
@@ -91,6 +89,7 @@
                     <span class="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400 font-semibold text-lg">Rp</span>
                     <input type="text" id="amountDisplay" placeholder="0" inputmode="numeric" 
                            oninput="formatRupiah(this)"
+                           onkeydown="if(event.key === 'Enter') { this.blur(); generateQRIS(); }"
                            class="w-full input-bg border-none rounded-2xl py-5 pl-14 pr-6 text-2xl font-bold focus:ring-2 focus:ring-blue-600 outline-none text-white">
                 </div>
             </div>
@@ -140,7 +139,6 @@
             const rawAmount = displayVal.replace(/[^0-9]/g, '');
             if (!rawAmount || rawAmount < 1) return alert("Isi nominal dulu Bang!");
 
-            // Data QRIS Statis
             const qrisData = "00020101021126670016COM.NOBUBANK.WWW01189360050300000879140214532503957167510303UMI51440014ID.CO.QRIS.WWW0215ID20253773559250303UMI5204481253033605802ID5917HANN 25 OK22116546010PEKALONGAN61055111162070703A01";
             const amountStr = "54" + ("00" + rawAmount.length).slice(-2) + rawAmount;
             const finalQRIS = qrisData + amountStr + "6304" + calcCRC16(qrisData + amountStr + "6304");
@@ -160,7 +158,6 @@
             document.getElementById('display-amount').innerText = "Rp " + parseInt(rawAmount).toLocaleString('id-ID');
             document.getElementById('result-area').classList.remove('hidden');
             
-            // Scroll otomatis ke hasil
             setTimeout(() => {
                 window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
             }, 100);
