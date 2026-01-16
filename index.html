@@ -8,15 +8,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #0f0f0f; }
+        body { font-family: 'Inter', sans-serif; background-color: #0f0f0f; color: white; }
         .card-bg { background-color: #1a1a1a; border: 1px solid #2a2a2a; }
         .input-bg { background-color: #262626; }
+        #canvas-result { width: 100%; max-width: 320px; height: auto; border-radius: 1rem; display: block; margin: 0 auto; }
     </style>
 </head>
-<body class="text-white flex items-center justify-center min-h-screen p-6">
+<body class="flex items-center justify-center min-h-screen p-6">
 
     <div class="w-full max-w-sm text-center">
-        <h1 class="text-2xl font-700 tracking-tight mb-1 uppercase">
+        <h1 class="text-2xl font-800 tracking-tight mb-1 uppercase">
             QRIS <span class="text-blue-500">HANN25</span>
         </h1>
         <p class="text-zinc-500 text-[10px] tracking-[0.2em] mb-8 uppercase">Secure Payment Terminal</p>
@@ -27,97 +28,89 @@
                 <div class="relative">
                     <span class="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400 font-semibold text-lg">Rp</span>
                     <input type="text" id="amountDisplay" placeholder="0" inputmode="numeric" oninput="formatRupiah(this)"
-                           class="w-full input-bg border-none rounded-2xl py-5 pl-14 pr-6 text-2xl font-bold focus:ring-2 focus:ring-blue-600 outline-none text-white placeholder:text-zinc-700">
+                           class="w-full input-bg border-none rounded-2xl py-5 pl-14 pr-6 text-2xl font-bold focus:ring-2 focus:ring-blue-600 outline-none text-white">
                 </div>
             </div>
             
-            <button onclick="generateQRIS()" 
-                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl transition-all active:scale-[0.97] text-lg">
+            <button onclick="generateQRISWithFrame()" 
+                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl transition-all active:scale-[0.97] text-lg uppercase">
                 Generate QRIS
             </button>
 
             <div id="qr-area" class="hidden mt-8 pt-8 border-t border-zinc-800">
-                <div class="flex flex-col items-center">
-                    <div id="qrcode" class="p-4 bg-white rounded-2xl"></div>
-                    
-                    <div class="mt-6">
-                        <p class="text-zinc-500 text-[10px] uppercase tracking-widest mb-1">Total Tagihan</p>
-                        <p id="display-amount" class="text-2xl font-bold text-white"></p>
-                    </div>
-
-                    <button onclick="downloadQR()" class="mt-6 flex items-center gap-2 text-blue-500 hover:text-blue-400 text-sm font-bold uppercase tracking-widest">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                        </svg>
-                        Download QR (HD)
-                    </button>
+                <canvas id="canvas-result" class="shadow-lg"></canvas>
+                <div class="mt-6">
+                    <p id="display-amount" class="text-2xl font-bold text-white"></p>
                 </div>
+                <button onclick="downloadQR()" class="mt-4 flex items-center justify-center w-full gap-2 text-blue-500 hover:text-blue-400 text-sm font-bold uppercase">
+                    Download QR Frame
+                </button>
             </div>
         </div>
-
-        <p class="text-zinc-700 text-[10px] mt-8 uppercase tracking-[0.3em]">Otomatis • Aman • Terverifikasi</p>
     </div>
+
+    <div id="qrcode-raw" style="display:none;"></div>
 
     <script>
         function formatRupiah(el) {
             let val = el.value.replace(/[^0-9]/g, '');
-            if (val !== "") {
-                el.value = parseInt(val).toLocaleString('id-ID');
-            } else {
-                el.value = "";
-            }
+            el.value = val !== "" ? parseInt(val).toLocaleString('id-ID') : "";
         }
 
-        function generateQRIS() {
+        function generateQRISWithFrame() {
             const displayVal = document.getElementById('amountDisplay').value;
             const rawAmount = displayVal.replace(/[^0-9]/g, '');
             
-            if (!rawAmount || rawAmount < 1) {
-                alert("Masukkan nominal bang!");
-                return;
-            }
+            if (!rawAmount || rawAmount < 1) return alert("Isi nominal dulu!");
 
-            // Data QRIS Statis lo
-            let qrisData = "00020101021126670016COM.NOBUBANK.WWW01189360050300000879140214532503957167510303UMI51440014ID.CO.QRIS.WWW0215ID20253773559250303UMI5204481253033605802ID5917HANN 25 OK22116546010PEKALONGAN61055111162070703A01";
-            let amountStr = "54" + ("00" + rawAmount.length).slice(-2) + rawAmount;
-            let qrisTanpaCRC = qrisData + amountStr + "6304";
-            let crc = calcCRC16(qrisTanpaCRC);
-            let finalQRIS = qrisTanpaCRC + crc;
+            // Data QRIS lo
+            const qrisData = "00020101021126670016COM.NOBUBANK.WWW01189360050300000879140214532503957167510303UMI51440014ID.CO.QRIS.WWW0215ID20253773559250303UMI5204481253033605802ID5917HANN 25 OK22116546010PEKALONGAN61055111162070703A01";
+            const amountStr = "54" + ("00" + rawAmount.length).slice(-2) + rawAmount;
+            const qrisTanpaCRC = qrisData + amountStr + "6304";
+            const finalQRIS = qrisTanpaCRC + calcCRC16(qrisTanpaCRC);
 
-            const qrContainer = document.getElementById('qrcode');
-            qrContainer.innerHTML = "";
-            
-            // Set High Resolution 1000px
-            new QRCode(qrContainer, {
-                text: finalQRIS,
-                width: 1000, 
-                height: 1000,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-            });
+            // Clear & Generate QR Mentah
+            const rawContainer = document.getElementById('qrcode-raw');
+            rawContainer.innerHTML = "";
+            new QRCode(rawContainer, { text: finalQRIS, width: 800, height: 800, correctLevel: QRCode.CorrectLevel.M });
 
-            // Preview di browser tetep kecil biar rapi
             setTimeout(() => {
-                const qrImg = qrContainer.querySelector('img');
-                const qrCanv = qrContainer.querySelector('canvas');
-                if(qrImg) qrImg.style.width = "200px";
-                if(qrCanv) qrCanv.style.width = "200px";
-            }, 50);
+                const canvas = document.getElementById('canvas-result');
+                const ctx = canvas.getContext('2d');
+                const qrCanvasRaw = rawContainer.querySelector('canvas');
+                const frameImg = new Image();
 
-            document.getElementById('display-amount').innerText = "Rp " + parseInt(rawAmount).toLocaleString('id-ID');
-            document.getElementById('qr-area').classList.remove('hidden');
+                // Gunakan link GitHub Raw lo
+                frameImg.crossOrigin = "anonymous";
+                frameImg.src = "https://raw.githubusercontent.com/Hann25-Host/qris/main/QRIS.png";
+
+                frameImg.onload = function() {
+                    canvas.width = frameImg.width;
+                    canvas.height = frameImg.height;
+                    
+                    // Gambar Frame Utama
+                    ctx.drawImage(frameImg, 0, 0);
+
+                    // Setting Posisi QR (Ubah angka ini kalau kurang pas)
+                    const qrSize = 510; 
+                    const posX = (canvas.width - qrSize) / 2;
+                    const posY = 415; 
+
+                    // Gambar QR ke atas Frame
+                    ctx.drawImage(qrCanvasRaw, posX, posY, qrSize, qrSize);
+
+                    document.getElementById('display-amount').innerText = "Rp " + parseInt(rawAmount).toLocaleString('id-ID');
+                    document.getElementById('qr-area').classList.remove('hidden');
+                };
+            }, 200);
         }
 
         function downloadQR() {
-            const canvas = document.querySelector('#qrcode canvas');
-            const rawAmount = document.getElementById('amountDisplay').value.replace(/[^0-9]/g, '');
-            if (canvas) {
-                const link = document.createElement('a');
-                link.download = 'QRIS-HANN25-' + rawAmount + '.png';
-                link.href = canvas.toDataURL("image/png");
-                link.click();
-            }
+            const canvas = document.getElementById('canvas-result');
+            const link = document.createElement('a');
+            link.download = 'QRIS_HANN25.png';
+            link.href = canvas.toDataURL("image/png");
+            link.click();
         }
 
         function calcCRC16(str) {
