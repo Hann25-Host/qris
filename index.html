@@ -3,155 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QRIS HANN 25</title>
+    <title>QRIS HANN25</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        /* CSS Body & Background */
-        body { 
-            background-color: #121212; 
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            margin: 0; 
-        }
-
-        /* Container Utama */
-        #capture-area {
-            padding: 20px;
-            background-color: #121212;
-        }
-
-        /* Kartu QRIS Putih */
-        .qris-card { 
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0f0f0f; color: white; }
+        .card-bg { background-color: #1a1a1a; border: 1px solid #2a2a2a; }
+        .input-bg { background-color: #262626; }
+        
+        /* Style Frame Poster */
+        #capture-frame { 
             background: #ffffff; 
-            border-radius: 45px; 
-            padding: 45px 35px; 
-            text-align: center; 
-            width: 330px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3); 
+            color: #000; 
+            width: 350px; 
+            margin: 0 auto; 
+            border-radius: 2.5rem;
         }
 
-        /* Bagian Nama Merchant */
-        .label-merchant { 
-            font-size: 11px; 
-            color: #8e8e8e; 
-            letter-spacing: 2px; 
-            margin-bottom: 6px; 
-            font-weight: 600; 
+        /* Tombol Download gaya Gambar Kedua */
+        .btn-download-custom {
+            background-color: #161616;
+            border: 1px solid #2a2a2a;
+            border-radius: 1.5rem;
+            padding: 1.25rem;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.2s;
+            margin-top: 1.5rem;
         }
-        .merchant-name { 
-            font-size: 26px; 
-            font-weight: 700; 
-            margin: 0 0 25px 0; 
-            color: #202020; 
+        .btn-download-custom:active { transform: scale(0.98); background-color: #202020; }
+        .btn-download-custom span {
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 0.75rem;
+            letter-spacing: 0.15em;
             text-transform: uppercase;
         }
-
-        /* Bingkai QR Code */
-        .qr-wrapper { 
-            border: 1.5px solid #f2f2f2; 
-            border-radius: 25px; 
-            padding: 20px; 
-            margin-bottom: 30px; 
-        }
-        .qr-wrapper img { 
-            width: 100%; 
-            display: block; 
-            border-radius: 10px;
-        }
-
-        /* Bagian Tagihan */
-        .label-tagihan { 
-            font-size: 11px; 
-            color: #8e8e8e; 
-            letter-spacing: 2px; 
-            margin-bottom: 8px; 
-            font-weight: 600; 
-        }
-        .amount { 
-            font-size: 38px; 
-            font-weight: 600; 
-            margin: 0 0 30px 0; 
-            color: #000000; 
-        }
-
-        .divider { 
-            border: 0; 
-            border-top: 1.5px solid #f0f0f0; 
-            margin-bottom: 25px; 
-        }
-
-        /* Tombol Simpan gaya Foto Kedua */
-        .download-btn { 
-            background: none; 
-            border: none; 
-            color: #1a73e8; 
-            font-weight: 700; 
-            font-size: 13px; 
-            letter-spacing: 1.2px; 
-            cursor: pointer; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            width: 100%; 
-            text-decoration: none; 
-            padding-bottom: 5px;
-        }
-        .download-btn img {
-            margin-right: 10px;
-            width: 18px;
-            filter: invert(33%) sepia(91%) saturate(1837%) hue-rotate(202deg) brightness(97%) contrast(92%);
-        }
+        .emoji-floppy { font-size: 1.5rem; }
     </style>
 </head>
-<body>
+<body class="flex flex-col items-center justify-center min-h-screen p-6">
 
-<div id="capture-area">
-    <div class="qris-card">
-        <p class="label-merchant">MERCHANT NAME</p>
-        <h2 class="merchant-name">HANN 25</h2>
-        
-        <div class="qr-wrapper">
-            <img id="qris-image" src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=HANN25-SAMPLE" alt="QR Code">
+    <div class="w-full max-w-sm text-center">
+        <h1 class="text-2xl font-800 tracking-tight mb-1 uppercase">
+            QRIS <span class="text-blue-500">HANN25</span>
+        </h1>
+        <p class="text-zinc-500 text-[10px] tracking-[0.2em] mb-8 uppercase text-center">Secure Payment Terminal</p>
+
+        <div class="card-bg rounded-[2.5rem] p-8 shadow-2xl mb-8">
+            <div class="text-left mb-6">
+                <label class="text-[10px] font-bold text-zinc-500 mb-3 block uppercase tracking-widest ml-1">Nominal Bayar</label>
+                <div class="relative">
+                    <span class="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400 font-semibold text-lg">Rp</span>
+                    <input type="text" id="amountDisplay" placeholder="0" inputmode="numeric" 
+                           oninput="formatRupiah(this)"
+                           onkeydown="if(event.key === 'Enter') { generateQRIS(); this.blur(); }"
+                           class="w-full input-bg border-none rounded-2xl py-5 pl-14 pr-6 text-2xl font-bold focus:ring-2 focus:ring-blue-600 outline-none text-white">
+                </div>
+            </div>
+            
+            <button onclick="generateQRIS()" 
+                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl transition-all active:scale-[0.97] text-lg uppercase">
+                Generate QRIS
+            </button>
         </div>
 
-        <p class="label-tagihan">TOTAL TAGIHAN</p>
-        <h1 class="amount">Rp 6.868</h1>
-        
-        <hr class="divider">
+        <div id="result-area" class="hidden animate-in fade-in duration-500">
+            <div id="capture-frame" class="p-10 shadow-2xl text-center">
+                <div class="mb-6">
+                    <p class="text-[10px] font-bold tracking-[0.3em] uppercase text-zinc-400 mb-1">Merchant Name</p>
+                    <p class="text-2xl font-800 uppercase tracking-tight" id="display-merchant">HANN 25</p>
+                </div>
 
-        <button class="download-btn" id="save-btn">
-            <img src="https://img.icons8.com/material-sharp/24/000000/save-as.png" alt="save">
-            <span>SIMPAN KE GALERI</span>
-        </button>
+                <div class="bg-white p-4 rounded-2xl inline-block mx-auto mb-6">
+                    <div id="qrcode" class="flex justify-center"></div>
+                </div>
+
+                <div class="space-y-1">
+                    <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Total Tagihan</p>
+                    <p id="display-amount" class="text-4xl font-800 text-black"></p>
+                </div>
+                
+                <div class="mt-8 pt-5 border-t border-zinc-100">
+                    <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-400">Scan & Bayar Sekarang</p>
+                </div>
+            </div>
+
+            <button onclick="downloadPoster()" class="btn-download-custom">
+                <span class="emoji-floppy">💾</span>
+                <span>Simpan ke Galeri</span>
+            </button>
+        </div>
     </div>
-</div>
 
-<script>
-    document.getElementById('save-btn').addEventListener('click', function() {
-        const target = document.querySelector('.qris-card');
-        const btn = this;
+    <script>
+        function formatRupiah(el) {
+            let val = el.value.replace(/[^0-9]/g, '');
+            el.value = val !== "" ? parseInt(val).toLocaleString('id-ID') : "";
+        }
 
-        // Sembunyikan tombol sebentar agar tidak ikut kefoto
-        btn.style.visibility = 'hidden';
-
-        html2canvas(target, {
-            backgroundColor: '#ffffff', // Latar belakang foto jadi putih bersih
-            scale: 3, // Kualitas tinggi (HD)
-            useCORS: true // Supaya gambar QR dari luar mau muncul di foto
-        }).then(canvas => {
-            const link = document.createElement('a');
-            link.download = 'QRIS-HANN25.png';
-            link.href = canvas.toDataURL('image/png');
-            link.click();
+        function generateQRIS() {
+            const displayVal = document.getElementById('amountDisplay').value;
+            const rawAmount = displayVal.replace(/[^0-9]/g, '');
             
-            // Tampilkan kembali tombolnya
-            btn.style.visibility = 'visible';
-        });
-    });
-</script>
+            if (!rawAmount || rawAmount < 1) {
+                alert("Isi nominal dulu bang!");
+                return;
+            }
 
+            // QRIS Data Base
+            const qrisData = "00020101021126670016COM.NOBUBANK.WWW01189360050300000879140214532503957167510303UMI51440014ID.CO.QRIS.WWW0215ID20253773559250303UMI5204481253033605802ID5917HANN 25 OK22116546010PEKALONGAN61055111162070703A01";
+            const amountStr = "54" + ("00" + rawAmount.length).slice(-2) + rawAmount;
+            const finalQRIS = qrisData + amountStr + "6304" + calcCRC16(qrisData + amountStr + "6304");
+
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = "";
+            
+            // Render QR
+            new QRCode(qrContainer, {
+                text: finalQRIS,
+                width: 250,
+                height: 250,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.M
+            });
+
+            document.getElementById('display-amount').innerText = "Rp " + parseInt(rawAmount).toLocaleString('id-ID');
+            document.getElementById('result-area').classList.remove('hidden');
+            
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+
+        async function downloadPoster() {
+            const frame = document.getElementById('capture-frame');
+            
+            // Kasih delay 100ms biar QRCode.js kelar render Canvas-nya
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            html2canvas(frame, { 
+                scale: 3,
+                backgroundColor: null,
+                logging: false,
+                useCORS: true
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `QRIS_HANN25_${Date.now()}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+            });
+        }
+
+        function calcCRC16(str) {
+            let crc = 0xFFFF;
+            for (let i = 0; i < str.length; i++) {
+                crc ^= str.charCodeAt(i) << 8;
+                for (let j = 0; j < 8; j++) {
+                    if ((crc & 0x8000) !== 0) crc = (crc << 1) ^ 0x1021;
+                    else crc <<= 1;
+                }
+            }
+            return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+        }
+    </script>
 </body>
 </html>
