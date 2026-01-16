@@ -11,7 +11,7 @@
         body { font-family: 'Inter', sans-serif; background-color: #0f0f0f; color: white; }
         .card-bg { background-color: #1a1a1a; border: 1px solid #2a2a2a; }
         .input-bg { background-color: #262626; }
-        #canvas-result { width: 100%; max-width: 320px; height: auto; border-radius: 1rem; display: block; margin: 0 auto; }
+        #canvas-result { width: 100%; max-width: 340px; height: auto; border-radius: 1.5rem; display: block; margin: 0 auto; }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-6">
@@ -38,11 +38,11 @@
             </button>
 
             <div id="qr-area" class="hidden mt-8 pt-8 border-t border-zinc-800">
-                <canvas id="canvas-result" class="shadow-lg"></canvas>
-                <div class="mt-6">
+                <canvas id="canvas-result" class="shadow-2xl"></canvas>
+                <div class="mt-6 text-center">
                     <p id="display-amount" class="text-2xl font-bold text-white"></p>
                 </div>
-                <button onclick="downloadQR()" class="mt-4 flex items-center justify-center w-full gap-2 text-blue-500 hover:text-blue-400 text-sm font-bold uppercase">
+                <button onclick="downloadQR()" class="mt-4 flex items-center justify-center w-full gap-2 text-blue-500 hover:text-blue-400 text-sm font-bold uppercase tracking-widest">
                     Download QR Frame
                 </button>
             </div>
@@ -63,16 +63,15 @@
             
             if (!rawAmount || rawAmount < 1) return alert("Isi nominal dulu!");
 
-            // Data QRIS lo
             const qrisData = "00020101021126670016COM.NOBUBANK.WWW01189360050300000879140214532503957167510303UMI51440014ID.CO.QRIS.WWW0215ID20253773559250303UMI5204481253033605802ID5917HANN 25 OK22116546010PEKALONGAN61055111162070703A01";
             const amountStr = "54" + ("00" + rawAmount.length).slice(-2) + rawAmount;
             const qrisTanpaCRC = qrisData + amountStr + "6304";
             const finalQRIS = qrisTanpaCRC + calcCRC16(qrisTanpaCRC);
 
-            // Clear & Generate QR Mentah
             const rawContainer = document.getElementById('qrcode-raw');
             rawContainer.innerHTML = "";
-            new QRCode(rawContainer, { text: finalQRIS, width: 800, height: 800, correctLevel: QRCode.CorrectLevel.M });
+            // Resolusi QR mentah ditingkatkan biar jernih di frame
+            new QRCode(rawContainer, { text: finalQRIS, width: 1000, height: 1000, correctLevel: QRCode.CorrectLevel.M });
 
             setTimeout(() => {
                 const canvas = document.getElementById('canvas-result');
@@ -80,7 +79,6 @@
                 const qrCanvasRaw = rawContainer.querySelector('canvas');
                 const frameImg = new Image();
 
-                // Gunakan link GitHub Raw lo
                 frameImg.crossOrigin = "anonymous";
                 frameImg.src = "https://raw.githubusercontent.com/Hann25-Host/qris/main/QRIS.png";
 
@@ -88,27 +86,26 @@
                     canvas.width = frameImg.width;
                     canvas.height = frameImg.height;
                     
-                    // Gambar Frame Utama
                     ctx.drawImage(frameImg, 0, 0);
 
-                    // Setting Posisi QR (Ubah angka ini kalau kurang pas)
-                    const qrSize = 510; 
-                    const posX = (canvas.width - qrSize) / 2;
-                    const posY = 415; 
+                    // --- KALIBRASI POSISI (FIXED) ---
+                    const qrSize = 780; // Ukuran QR pas di kotak putih
+                    const posX = (canvas.width - qrSize) / 2; // Auto Center
+                    const posY = 555; // Posisi vertikal di tengah kotak putih
 
-                    // Gambar QR ke atas Frame
                     ctx.drawImage(qrCanvasRaw, posX, posY, qrSize, qrSize);
 
                     document.getElementById('display-amount').innerText = "Rp " + parseInt(rawAmount).toLocaleString('id-ID');
                     document.getElementById('qr-area').classList.remove('hidden');
                 };
-            }, 200);
+            }, 300);
         }
 
         function downloadQR() {
             const canvas = document.getElementById('canvas-result');
+            const rawAmount = document.getElementById('amountDisplay').value.replace(/[^0-9]/g, '');
             const link = document.createElement('a');
-            link.download = 'QRIS_HANN25.png';
+            link.download = `QRIS_HANN25_${rawAmount}.png`;
             link.href = canvas.toDataURL("image/png");
             link.click();
         }
