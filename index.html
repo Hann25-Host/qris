@@ -9,21 +9,32 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #0f0f0f; color: white; }
+        body { font-family: 'Inter', sans-serif; background-color: #0f0f0f; color: white; margin: 0; padding: 0; }
         .card-bg { background-color: #1a1a1a; border: 1px solid #2a2a2a; }
         .input-bg { background-color: #262626; }
         
+        /* Container luar buat nengahin capture agar tidak geser */
+        #capture-area {
+            padding: 20px;
+            display: inline-block;
+            background-color: transparent;
+        }
+
         #capture-frame { 
             background: #ffffff; 
             color: #000; 
             width: 350px; 
-            margin: 0 auto; 
             border-radius: 2.5rem;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
+        /* Tombol Persis Gambar */
         .btn-download-custom {
-            background-color: #161616;
-            border: 1px solid #2a2a2a;
+            background-color: #111111;
+            border: 1px solid #222222;
             border-radius: 1.5rem;
             padding: 1.25rem;
             width: 100%;
@@ -32,18 +43,21 @@
             justify-content: center;
             gap: 12px;
             transition: all 0.2s;
-            margin-top: 1.5rem;
             cursor: pointer;
+            margin-top: 1rem;
         }
-        .btn-download-custom:active { transform: scale(0.98); background-color: #202020; }
+        .btn-download-custom:active { transform: scale(0.98); }
         .btn-download-custom span {
-            color: #ffffff;
+            color: #999999;
             font-weight: 800;
-            font-size: 0.75rem;
-            letter-spacing: 0.15em;
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
             text-transform: uppercase;
         }
-        .emoji-floppy { font-size: 1.5rem; }
+        
+        /* Fix QR agar Center */
+        #qrcode { display: flex; justify-content: center; align-items: center; width: 250px; height: 250px; }
+        #qrcode canvas, #qrcode img { display: block; margin: 0 auto; }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-6">
@@ -61,42 +75,41 @@
                     <span class="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400 font-semibold text-lg">Rp</span>
                     <input type="text" id="amountDisplay" placeholder="0" inputmode="numeric" 
                            oninput="formatRupiah(this)"
-                           onkeydown="if(event.key === 'Enter') { generateQRIS(); this.blur(); }"
                            class="w-full input-bg border-none rounded-2xl py-5 pl-14 pr-6 text-2xl font-bold focus:ring-2 focus:ring-blue-600 outline-none text-white">
                 </div>
             </div>
-            
-            <button onclick="generateQRIS()" 
-                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl transition-all active:scale-[0.97] text-lg uppercase">
+            <button onclick="generateQRIS()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl transition-all active:scale-[0.97] text-lg uppercase">
                 Generate QRIS
             </button>
         </div>
 
         <div id="result-area" class="hidden animate-in fade-in duration-500">
-            <div id="capture-frame" class="p-10 shadow-2xl text-center">
-                <div class="mb-6">
-                    <p class="text-[10px] font-bold tracking-[0.3em] uppercase text-zinc-400 mb-1">Merchant Name</p>
-                    <p class="text-2xl font-800 uppercase tracking-tight">HANN 25</p>
-                </div>
+            <div id="capture-area">
+                <div id="capture-frame" class="p-10 text-center">
+                    <div class="mb-6">
+                        <p class="text-[10px] font-bold tracking-[0.3em] uppercase text-zinc-400 mb-1">Merchant Name</p>
+                        <p class="text-2xl font-800 uppercase tracking-tight">HANN 25</p>
+                    </div>
 
-                <div class="bg-white p-4 rounded-2xl inline-block mx-auto mb-6">
-                    <div id="qrcode" class="flex justify-center"></div>
-                </div>
+                    <div class="bg-white p-2 rounded-2xl mb-6 flex justify-center items-center">
+                        <div id="qrcode"></div>
+                    </div>
 
-                <div class="space-y-1">
-                    <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Total Tagihan</p>
-                    <p id="display-amount" class="text-4xl font-800 text-black"></p>
-                </div>
-                
-                <div class="mt-8 pt-5 border-t border-zinc-100">
-                    <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-400">Scan & Bayar Sekarang</p>
+                    <div class="space-y-1">
+                        <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Total Tagihan</p>
+                        <p id="display-amount" class="text-4xl font-800 text-black"></p>
+                    </div>
+                    
+                    <div class="mt-8 pt-5 border-t border-zinc-100 w-full">
+                        <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-400">Scan & Bayar Sekarang</p>
+                    </div>
                 </div>
             </div>
 
-            <button onclick="downloadPoster()" class="btn-download-custom">
-                <span class="emoji-floppy">💾</span>
+            <div class="btn-download-custom" id="btn-save" onclick="downloadPoster()">
+                <img src="https://img.icons8.com/emoji/48/floppy-disk-emoji.png" width="24" alt="save">
                 <span>Simpan ke Galeri</span>
-            </button>
+            </div>
         </div>
     </div>
 
@@ -109,21 +122,16 @@
         function generateQRIS() {
             const displayVal = document.getElementById('amountDisplay').value;
             const rawAmount = displayVal.replace(/[^0-9]/g, '');
-            
-            if (!rawAmount || rawAmount < 1) {
-                alert("Isi nominal dulu bang!");
-                return;
-            }
+            if (!rawAmount || rawAmount < 1) return alert("Isi nominal dulu!");
 
             const qrisData = "00020101021126670016COM.NOBUBANK.WWW01189360050300000879140214532503957167510303UMI51440014ID.CO.QRIS.WWW0215ID20253773559250303UMI5204481253033605802ID5917HANN 25 OK22116546010PEKALONGAN61055111162070703A01";
             const amountStr = "54" + ("00" + rawAmount.length).slice(-2) + rawAmount;
             const finalQRIS = qrisData + amountStr + "6304" + calcCRC16(qrisData + amountStr + "6304");
 
-            const qrContainer = document.getElementById('qrcode');
-            qrContainer.innerHTML = "";
+            const qrDiv = document.getElementById('qrcode');
+            qrDiv.innerHTML = "";
             
-            // Render QR sebagai gambar (useSVG: false defaultnya bakal bikin img tag juga)
-            new QRCode(qrContainer, {
+            new QRCode(qrDiv, {
                 text: finalQRIS,
                 width: 250,
                 height: 250,
@@ -134,35 +142,39 @@
 
             document.getElementById('display-amount').innerText = "Rp " + parseInt(rawAmount).toLocaleString('id-ID');
             document.getElementById('result-area').classList.remove('hidden');
-            
             window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }
 
         async function downloadPoster() {
             const frame = document.getElementById('capture-frame');
+            const btn = document.getElementById('btn-save');
             
-            // KUNCINYA DI SINI:
-            // Ambil elemen img yang dibuat otomatis sama qrcode.js
-            const qrImg = document.querySelector('#qrcode img');
-            if (qrImg) {
-                // Paksa source gambar di-load ulang biar html2canvas nggak skip
-                const src = qrImg.src;
-                qrImg.src = src; 
-            }
+            // UI Feedback
+            btn.style.opacity = "0.5";
+            btn.querySelector('span').innerText = "PROSES...";
 
-            // Tunggu sebentar biar render beneran kelar
-            await new Promise(resolve => setTimeout(resolve, 200));
+            // CRITICAL FIX: Paksa hapus duplikasi canvas qrcode js
+            const canvases = document.querySelectorAll('#qrcode canvas');
+            if(canvases.length > 1) canvases[0].remove();
+
+            // Kasih delay lebih lama biar HP sempet render
+            await new Promise(r => setTimeout(r, 500));
 
             html2canvas(frame, { 
-                scale: 4, // Makin tinggi biar makin HD pas di-print/scan
+                scale: 3,
                 useCORS: true,
                 allowTaint: true,
+                scrollX: 0,
+                scrollY: -window.scrollY, // Fix offset geser
                 backgroundColor: "#ffffff"
             }).then(canvas => {
                 const link = document.createElement('a');
-                link.download = `QRIS_HANN25_${Date.now()}.png`;
-                link.href = canvas.toDataURL("image/png");
+                link.download = `HANN25_${Date.now()}.png`;
+                link.href = canvas.toDataURL("image/png", 1.0);
                 link.click();
+                
+                btn.style.opacity = "1";
+                btn.querySelector('span').innerText = "SIMPAN KE GALERI";
             });
         }
 
