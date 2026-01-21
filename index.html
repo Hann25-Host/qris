@@ -104,7 +104,7 @@
                 <span class="label">Nominal Bayar</span>
                 <div class="input-wrapper">
                     <span class="currency-prefix">Rp</span>
-                    <input type="text" id="amountDisplay" placeholder="0" inputmode="numeric" oninput="formatRupiah(this)">
+                    <input type="text" id="amountDisplay" placeholder="0" inputmode="numeric" oninput="formatRupiah(this)" onkeydown="checkEnter(event)">
                 </div>
             </div>
             <button onclick="generateQRIS()" class="btn-generate">Generate QRIS</button>
@@ -142,6 +142,14 @@
         function formatRupiah(el) {
             let val = el.value.replace(/[^0-9]/g, '');
             el.value = val !== "" ? parseInt(val).toLocaleString('id-ID') : "";
+        }
+
+        function checkEnter(e) {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                document.activeElement.blur();
+                generateQRIS();
+            }
         }
 
         function calcCRC16(str) {
