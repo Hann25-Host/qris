@@ -3,129 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QRIS HANN25 - Generator</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>HANN25 - QRIS</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
         
+        :root {
+            --bg-dark: #0f0f0f;
+            --card-bg: #1a1a1a;
+            --input-bg: #262626;
+            --accent-blue: #2563eb;
+            --text-main: #ffffff;
+            --text-dim: #999999;
+            --max-width: 360px;
+        }
+
         body { 
             font-family: 'Inter', sans-serif; 
-            background-color: #0f0f0f; 
-            color: white; 
+            background-color: var(--bg-dark); 
+            color: var(--text-main); 
             margin: 0; 
-            padding: 0;
+            padding: 24px;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
         }
 
-        .card-bg { background-color: #1a1a1a; border: 1px solid #2a2a2a; }
-        .input-bg { background-color: #262626; }
+        .container { width: 100%; max-width: var(--max-width); display: flex; flex-direction: column; align-items: center; }
+
+        .header { text-align: center; margin-bottom: 32px; }
+        .header h1 { font-weight: 800; font-size: 1.5rem; margin: 0; text-transform: uppercase; letter-spacing: -0.025em; }
+        .header h1 span { color: var(--accent-blue); }
+        .header p { color: #52525b; font-size: 10px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; margin-top: 4px; }
+
+        .card { background: var(--card-bg); border-radius: 2.5rem; padding: 32px; border: 1px solid #2a2a2a; width: 100%; box-sizing: border-box; margin-bottom: 24px; }
         
-        #capture-area {
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            background-color: transparent;
+        .input-group { margin-bottom: 24px; }
+        .label { font-size: 10px; font-weight: 700; color: #71717a; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; display: block; }
+        
+        .input-wrapper { position: relative; }
+        .currency-prefix { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: #a1a1aa; font-weight: 600; font-size: 1.1rem; }
+        
+        input { 
+            width: 100%; background: var(--input-bg); border: none; border-radius: 1rem; padding: 20px 20px 20px 56px; 
+            font-size: 1.5rem; font-weight: 700; color: white; outline: none; box-sizing: border-box; transition: 0.2s;
         }
+        input:focus { box-shadow: 0 0 0 2px var(--accent-blue); }
+
+        .btn-generate { 
+            width: 100%; background: var(--accent-blue); color: white; font-weight: 700; font-size: 1.1rem; 
+            padding: 16px; border-radius: 1rem; border: none; cursor: pointer; transition: all 0.2s; text-transform: uppercase;
+        }
+        .btn-generate:active { transform: scale(0.95); opacity: 0.9; }
+
+        #result-area { width: 100%; display: none; flex-direction: column; align-items: center; }
 
         #capture-frame { 
-            background: #ffffff; 
-            color: #000; 
-            width: 350px; 
-            border-radius: 2.5rem;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 40px;
+            background: #ffffff; color: #000; width: 100%; border-radius: 2.5rem; 
+            padding: 40px; display: flex; flex-direction: column; align-items: center; box-sizing: border-box;
         }
 
-        .btn-download-custom {
-            background-color: #111111;
-            border: 1px solid #222222;
-            border-radius: 1.5rem;
-            padding: 1.25rem;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            transition: all 0.2s;
-            cursor: pointer;
-            margin-top: 1rem;
+        .merchant-info { text-align: center; margin-bottom: 24px; }
+        .merchant-tag { font-size: 10px; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase; color: #a1a1aa; margin: 0; }
+        .merchant-name { font-size: 1.5rem; font-weight: 800; margin: 4px 0 0 0; }
+
+        #qrcode { background: white; padding: 8px; margin-bottom: 24px; }
+        #qrcode img { display: block; max-width: 100%; height: auto; }
+
+        .amount-display { text-align: center; }
+        .amount-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; color: #71717a; margin: 0; }
+        .amount-val { font-size: 2.25rem; font-weight: 800; color: #000; margin: 4px 0 0 0; }
+
+        .footer-frame { margin-top: 32px; padding-top: 20px; border-top: 1px solid #f4f4f5; width: 100%; text-align: center; }
+        .footer-text { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; color: #a1a1aa; }
+
+        .btn-save { 
+            margin-top: 16px; width: 100%; background: #111; border: 1px solid #222; border-radius: 1.5rem; 
+            padding: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); box-sizing: border-box;
         }
-        .btn-download-custom:active { transform: scale(0.98); }
-        .btn-download-custom .icon-emoji { font-size: 1.2rem; }
-        .btn-download-custom span {
-            color: #999999;
-            font-weight: 800;
-            font-size: 0.7rem;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-        }
-        
-        #qrcode { display: flex; justify-content: center; align-items: center; }
-        #qrcode canvas, #qrcode img { display: block; margin: 0 auto; border-radius: 8px; }
+        .btn-save:active { transform: scale(0.95); background: #1a1a1a; }
+        .btn-save span { color: var(--text-dim); font-weight: 800; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; }
+        .icon-save { font-size: 1.2rem; }
+
+        .main-footer { margin-top: 40px; font-size: 9px; color: rgba(255, 255, 255, 0.2); text-align: center; letter-spacing: 2px; padding-bottom: 30px; text-transform: uppercase; width: 100%; }
     </style>
 </head>
-<body class="p-6">
+<body>
 
-    <div class="w-full max-w-sm flex flex-col items-center">
-        <div class="text-center mb-8">
-            <h1 class="text-2xl font-800 tracking-tight mb-1 uppercase">
-                QRIS <span class="text-blue-500">HANN25</span>
-            </h1>
-            <p class="text-zinc-500 text-[10px] tracking-[0.2em] uppercase">Secure Payment Terminal</p>
+    <div class="container">
+        <div class="header">
+            <h1>QRIS <span>HANN25</span></h1>
+            <p>Secure Payment Terminal</p>
         </div>
 
-        <div class="card-bg rounded-[2.5rem] p-8 shadow-2xl mb-8 w-full">
-            <div class="text-left mb-6">
-                <label class="text-[10px] font-bold text-zinc-500 mb-3 block uppercase tracking-widest ml-1">Nominal Bayar</label>
-                <div class="relative">
-                    <span class="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-400 font-semibold text-lg">Rp</span>
-                    <input type="text" id="amountDisplay" placeholder="0" inputmode="numeric" 
-                           oninput="formatRupiah(this)"
-                           onkeydown="if(event.key === 'Enter') { this.blur(); generateQRIS(); }"
-                           class="w-full input-bg border-none rounded-2xl py-5 pl-14 pr-6 text-2xl font-bold focus:ring-2 focus:ring-blue-600 outline-none text-white">
+        <div class="card">
+            <div class="input-group">
+                <span class="label">Nominal Bayar</span>
+                <div class="input-wrapper">
+                    <span class="currency-prefix">Rp</span>
+                    <input type="text" id="amountDisplay" placeholder="0" inputmode="numeric" oninput="formatRupiah(this)">
                 </div>
             </div>
-            <button onclick="generateQRIS()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl transition-all active:scale-[0.97] text-lg uppercase">
-                Generate QRIS
-            </button>
+            <button onclick="generateQRIS()" class="btn-generate">Generate QRIS</button>
         </div>
 
-        <div id="result-area" class="hidden w-full flex flex-col items-center">
-            <div id="capture-area">
-                <div id="capture-frame">
-                    <div class="mb-6 text-center">
-                        <p class="text-[10px] font-bold tracking-[0.3em] uppercase text-zinc-400 mb-1">Merchant Name</p>
-                        <p class="text-2xl font-800 uppercase tracking-tight">HANN 25</p>
-                    </div>
+        <div id="result-area">
+            <div id="capture-frame">
+                <div class="merchant-info">
+                    <p class="merchant-tag">Merchant Name</p>
+                    <p class="merchant-name">HANN 25</p>
+                </div>
 
-                    <div class="bg-white p-2 mb-6">
-                        <div id="qrcode"></div>
-                    </div>
+                <div id="qrcode"></div>
 
-                    <div class="space-y-1 text-center">
-                        <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">Total Tagihan</p>
-                        <p id="display-amount" class="text-4xl font-800 text-black"></p>
-                    </div>
-                    
-                    <div class="mt-8 pt-5 border-t border-zinc-100 w-full text-center">
-                        <p class="text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-400">Scan & Bayar Sekarang</p>
-                    </div>
+                <div class="amount-display">
+                    <p class="amount-tag">Total Tagihan</p>
+                    <p id="display-amount" class="amount-val"></p>
+                </div>
+                
+                <div class="footer-frame">
+                    <p class="footer-text">Scan & Bayar Sekarang</p>
                 </div>
             </div>
 
-            <div class="btn-download-custom" id="btn-save" onclick="downloadPoster()">
-                <div class="icon-emoji">💾</div>
-                <span>Simpan ke Galeri</span>
+            <div class="btn-save" id="btn-save" onclick="downloadPoster()">
+                <span class="icon-save">💾</span>
+                <span id="btn-text">Simpan ke Galeri</span>
             </div>
         </div>
+
+        <div class="main-footer">© 2026 HANN 25 • ALL RIGHTS RESERVED</div>
     </div>
 
     <script>
@@ -134,14 +144,29 @@
             el.value = val !== "" ? parseInt(val).toLocaleString('id-ID') : "";
         }
 
+        function calcCRC16(str) {
+            let crc = 0xFFFF;
+            for (let i = 0; i < str.length; i++) {
+                crc ^= str.charCodeAt(i) << 8;
+                for (let j = 0; j < 8; j++) {
+                    if ((crc & 0x8000) !== 0) crc = (crc << 1) ^ 0x1021;
+                    else crc <<= 1;
+                }
+            }
+            return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+        }
+
         function generateQRIS() {
             const displayVal = document.getElementById('amountDisplay').value;
             const rawAmount = displayVal.replace(/[^0-9]/g, '');
             if (!rawAmount || rawAmount < 1) return alert("Isi nominal dulu Bang!");
 
-            const qrisData = "00020101021126670016COM.NOBUBANK.WWW01189360050300000879140214532503957167510303UMI51440014ID.CO.QRIS.WWW0215ID20253773559250303UMI5204481253033605802ID5917HANN 25 OK22116546010PEKALONGAN61055111162070703A01";
-            const amountStr = "54" + ("00" + rawAmount.length).slice(-2) + rawAmount;
-            const finalQRIS = qrisData + amountStr + "6304" + calcCRC16(qrisData + amountStr + "6304");
+            const qrisHeader = "00020101021126670016COM.NOBUBANK.WWW01189360050300000879140214532503957167510303UMI51440014ID.CO.QRIS.WWW0215ID20253773559250303UMI520448125303360";
+            const qrisFooter = "5802ID5917HANN 25 OK22116546010PEKALONGAN61055111162070703A01";
+            
+            const amountTag = "54" + ("00" + rawAmount.length).slice(-2) + rawAmount;
+            const fullDataNoCRC = qrisHeader + amountTag + qrisFooter + "6304";
+            const finalQRIS = fullDataNoCRC + calcCRC16(fullDataNoCRC);
 
             const qrDiv = document.getElementById('qrcode');
             qrDiv.innerHTML = "";
@@ -156,7 +181,7 @@
             });
 
             document.getElementById('display-amount').innerText = "Rp " + parseInt(rawAmount).toLocaleString('id-ID');
-            document.getElementById('result-area').classList.remove('hidden');
+            document.getElementById('result-area').style.display = 'flex';
             
             setTimeout(() => {
                 window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
@@ -165,13 +190,11 @@
 
         async function downloadPoster() {
             const frame = document.getElementById('capture-frame');
+            const btnText = document.getElementById('btn-text');
             const btn = document.getElementById('btn-save');
             
-            btn.style.opacity = "0.5";
-            btn.querySelector('span').innerText = "PROSES...";
-
-            const canvases = document.querySelectorAll('#qrcode canvas');
-            if(canvases.length > 1) canvases[0].remove();
+            btnText.innerText = "PROSES...";
+            btn.style.pointerEvents = "none";
 
             await new Promise(r => setTimeout(r, 500));
 
@@ -184,22 +207,9 @@
                 link.download = `HANN25_${Date.now()}.png`;
                 link.href = canvas.toDataURL("image/png", 1.0);
                 link.click();
-                
-                btn.style.opacity = "1";
-                btn.querySelector('span').innerText = "SIMPAN KE GALERI";
+                btnText.innerText = "SIMPAN KE GALERI";
+                btn.style.pointerEvents = "auto";
             });
-        }
-
-        function calcCRC16(str) {
-            let crc = 0xFFFF;
-            for (let i = 0; i < str.length; i++) {
-                crc ^= str.charCodeAt(i) << 8;
-                for (let j = 0; j < 8; j++) {
-                    if ((crc & 0x8000) !== 0) crc = (crc << 1) ^ 0x1021;
-                    else crc <<= 1;
-                }
-            }
-            return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
         }
     </script>
 </body>
