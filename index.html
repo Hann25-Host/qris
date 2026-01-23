@@ -170,11 +170,25 @@
             const rawAmount = displayVal.replace(/[^0-9]/g, '');
             if (!rawAmount || rawAmount < 1) return alert("Isi nominal dulu Bang!");
 
-            const qrisHeader = "00020101021126670016COM.NOBUBANK.WWW01189360050300000879140214532503957167510303UMI51440014ID.CO.QRIS.WWW0215ID20253773559250303UMI520448125303360";
-            const qrisFooter = "5802ID5917HANN 25 OK22116546010PEKALONGAN61055111162070703A01";
+            // STRUKTUR PERBAIKAN:
+            // 1. Data Statis Awal sampai Merchant Info
+            let qrisData = "00020101021126670016COM.NOBUBANK.WWW01189360050300000879140214532503957167510303UMI51440014ID.CO.QRIS.WWW0215ID20253773559250303UMI52044812";
             
-            const amountTag = "54" + ("00" + rawAmount.length).slice(-2) + rawAmount;
-            const fullDataNoCRC = qrisHeader + amountTag + qrisFooter + "6304";
+            // 2. Suntik Tag 53 (Currency)
+            qrisData += "5303360"; 
+            
+            // 3. Suntik Tag 54 (Amount) - WAJIB PRESISI
+            const amountTag = "54" + rawAmount.length.toString().padStart(2, '0') + rawAmount;
+            qrisData += amountTag;
+
+            // 4. Suntik Tag 55 (Tip Indicator) - BIAR SPAY GAK MANUAL & DANA VALID
+            qrisData += "550201";
+
+            // 5. Data Merchant & Lokasi
+            qrisData += "5802ID5917HANN 25 OK22116546010PEKALONGAN61055111162070703A01";
+
+            // 6. Hitung CRC
+            const fullDataNoCRC = qrisData + "6304";
             const finalQRIS = fullDataNoCRC + calcCRC16(fullDataNoCRC);
 
             const qrDiv = document.getElementById('qrcode');
